@@ -939,3 +939,79 @@ section.cuenta-regresiva{
 
   height: 220px;
 }
+/* Sección de carga */
+.seccion-carga {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 80vw;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--color-primario);
+  z-index: 9999;
+  opacity: 1;
+  animation: fadeIn ease 1.5s;
+}
+
+.seccion-carga p {
+  font-family: 'Montserrat', sans-serif;
+  color: white;
+  font-size: 16px;
+  margin-top: 18px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  border-top: 5px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Animación del spinner */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Ocultar sección de carga */
+.seccion-carga.hidden {
+  animation: fadeOut ease 1.5s;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.qr-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px; /* Espacio debajo del QR */
+}
+
+.qr-section img {
+  max-width: 150px; /* Ajusta el tamaño del QR si es necesario */
+  margin-bottom: 10px; /* Espacio adicional entre el QR y el siguiente contenido */
+}
+
+.qr-section p {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  text-align: center;
+  color: var(--color-secundario); /* Asegura que el color sea coherente */
+}
