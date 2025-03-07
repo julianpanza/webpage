@@ -280,8 +280,92 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
 
 
 </section>
-    
+    <!-- spotify -->
+    <iframe style="border-radius:12px" 
+    src="https://open.spotify.com/embed/playlist/4Vm8iih2i2K6iXuPev61Il?si=1e9fa2e72b1b4d90" 
+    width="100%" 
+    height="380" 
+    frameborder="0" 
+    allowfullscreen="" 
+    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
+</iframe>
 
+<br>
+<div class="animated divCanciones">
+<input type="text" id="songSearch" placeholder="Escribe una canción...">
+<button onclick="searchSong()">Buscar</button>
+<div id="searchResults"></div>
+</div>
+<script>
+const CLIENT_ID = "d950ae09b4e14eb0b82b70151b1dcb82"; 
+const REDIRECT_URI = "https://julianpanza.github.io/alfon15invite/"; 
+const PLAYLIST_ID = "4Vm8iih2i2K6iXuPev61Il?si=1e9fa2e72b1b4d90ID"; 
+let accessToken = null;
+
+// Función para autenticarse en Spotify
+async function authenticate() {
+    const authUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${REDIRECT_URI}&scope=playlist-modify-public playlist-modify-private`;
+    window.location.href = authUrl;
+}
+
+// Obtener token de la URL después de autenticación
+function getTokenFromUrl() {
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    accessToken = params.get("access_token");
+}
+
+// Función para buscar canciones
+async function searchSong() {
+    const query = document.getElementById("songSearch").value;
+    if (!query) return;
+
+    if (!accessToken) {
+        authenticate();
+        return;
+    }
+
+    const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+    });
+
+    const data = await response.json();
+    const resultsDiv = document.getElementById("searchResults");
+    resultsDiv.innerHTML = "";
+
+    data.tracks.items.forEach(track => {
+        const trackDiv = document.createElement("div");
+        trackDiv.innerHTML = `
+            <p>${track.name} - ${track.artists[0].name} <button onclick="addSong('${track.uri}')">➕ Agregar</button></p>
+        `;
+        resultsDiv.appendChild(trackDiv);
+    });
+}
+
+// Función para agregar canción a la playlist
+async function addSong(trackUri) {
+    if (!accessToken) {
+        authenticate();
+        return;
+    }
+
+    await fetch(`https://api.spotify.com/v1/playlists/${PLAYLIST_ID}/tracks`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ uris: [trackUri] })
+    });
+
+    alert("✅ Canción agregada a la playlist");
+}
+
+// Obtener token si está en la URL
+getTokenFromUrl();
+</script>
+
+<!-- fin sección spotify -->
     <!-- Canciones -->
     <section class="canciones">
 
