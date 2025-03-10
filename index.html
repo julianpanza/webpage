@@ -389,15 +389,14 @@ async function addSong(trackUri) {
             alert("✅ Canción agregada a la playlist");
         } else {
             const errorData = await response.json();
-            console.error(errorData); // Registra el error para depuración
+            console.error("Error al agregar la canción:", errorData); // Log el error completo
             alert("⚠️ Error al agregar la canción. Intenta de nuevo.");
         }
     } catch (error) {
-        console.error(error); // Registra el error para depuración
+        console.error("Error al hacer la solicitud:", error); // Registra el error
         alert("⚠️ Error al agregar la canción. Intenta de nuevo.");
     }
 }
-
 // Obtener token si está en la URL
 getTokenFromUrl();
 </script>
