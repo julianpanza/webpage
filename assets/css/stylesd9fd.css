@@ -1015,35 +1015,3 @@ section.cuenta-regresiva{
   text-align: center;
   color: var(--color-secundario); /* Asegura que el color sea coherente */
 }
-.container-busqueda {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 60vh;
-    margin-top: -200px; /* ajusta este valor según la altura de tu iframe */
-}
-
-.divCanciones {
-    text-align: center;
-}
-
-#songSearch {
-    padding: 10px;
-    font-size: 18px;
-    border-radius: 10px;
-    border: 1px solid #ccc;
-}
-
-button {
-    padding: 10px 20px;
-    font-size: 18px;
-    border-radius: 10px;
-    background-color: #4CAF50;
-    color: #fff;
-    border: none;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #3e8e41;
-}
