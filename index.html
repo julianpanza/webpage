@@ -375,16 +375,27 @@ async function addSong(trackUri) {
         return;
     }
 
-    await fetch(`https://api.spotify.com/v1/playlists/${PLAYLIST_ID}/tracks`, {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ uris: [trackUri] })
-    });
+    try {
+        const response = await fetch(`https://api.spotify.com/v1/playlists/${PLAYLIST_ID}/tracks`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ uris: [trackUri] })
+        });
 
-    alert("✅ Canción agregada a la playlist");
+        if (response.ok) {
+            alert("✅ Canción agregada a la playlist");
+        } else {
+            const errorData = await response.json();
+            console.error(errorData); // Registra el error para depuración
+            alert("⚠️ Error al agregar la canción. Intenta de nuevo.");
+        }
+    } catch (error) {
+        console.error(error); // Registra el error para depuración
+        alert("⚠️ Error al agregar la canción. Intenta de nuevo.");
+    }
 }
 
 // Obtener token si está en la URL
