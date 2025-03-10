@@ -340,37 +340,37 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
         }
 
         // Buscar canciones en Spotify
-        async function searchSong() {
-            const query = document.getElementById("songSearch").value.trim();
-            if (!query) {
-                showError("Por favor, ingresa un término de búsqueda.");
-                return;
-            }
+     async function searchSong() {
+    const query = document.getElementById("songSearch").value.trim();
+    if (!query) {
+        showError("Por favor, ingresa un término de búsqueda.");
+        return;
+    }
 
-            if (!validateToken()) {
-                sessionStorage.setItem("search_after_auth", query);
-                return;
-            }
+    if (!validateToken()) {
+        sessionStorage.setItem("search_after_auth", query);
+        return;
+    }
 
-            showLoading();
-            try {
-                const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`, {
-                    headers: { Authorization: `Bearer ${accessToken}` }
-                });
+    showLoading();
+    try {
+        const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`, {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
 
-                if (!response.ok) {
-                    throw new Error(`Error en la búsqueda: ${response.statusText}`);
-                }
-
-                const data = await response.json();
-                displayResults(data.tracks.items);
-            } catch (error) {
-                showError(`Hubo un problema al buscar las canciones: ${error.message}`);
-            } finally {
-                hideLoading();
-            }
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error.message || "Error en la búsqueda.");
         }
 
+        const data = await response.json();
+        displayResults(data.tracks.items);
+    } catch (error) {
+        showError(`Hubo un problema al buscar las canciones: ${error.message}`);
+    } finally {
+        hideLoading();
+    }
+}
         // Mostrar resultados de la búsqueda
         function displayResults(tracks) {
             const resultsDiv = document.getElementById("searchResults");
