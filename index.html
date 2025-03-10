@@ -388,12 +388,13 @@ async function addSong(trackUri) {
         if (response.ok) {
             alert("✅ Canción agregada a la playlist");
         } else {
-            const errorData = await response.json();
-            console.error("Error al agregar la canción:", errorData); // Log el error completo
+            // Si la respuesta no es exitosa, intenta obtener el mensaje de error
+            const errorText = await response.text();  // Obtén la respuesta como texto
+            console.error("Error al agregar la canción:", errorText);  // Imprime el error en texto
             alert("⚠️ Error al agregar la canción. Intenta de nuevo.");
         }
     } catch (error) {
-        console.error("Error al hacer la solicitud:", error); // Registra el error
+        console.error("Error al hacer la solicitud:", error);  // Registra el error
         alert("⚠️ Error al agregar la canción. Intenta de nuevo.");
     }
 }
