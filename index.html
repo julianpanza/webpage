@@ -308,7 +308,17 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
         const REDIRECT_URI = "https://julianpanza.github.io/alfon15invite/"; // Reemplaza con tu Redirect URI
         const PLAYLIST_ID = "4Vm8iih2i2K6iXuPev61Il"; // ID de la playlist
         let accessToken = null;
+async function getProfile(accessToken) {
+  let accessToken = localStorage.getItem('access_token');
 
+  const response = await fetch('https://api.spotify.com/v1/me', {
+    headers: {
+      Authorization: 'Bearer ' + accessToken
+    }
+  });
+
+  const data = await response.json();
+}
         // Obtener token de la URL y almacenarlo en localStorage
         function getTokenFromUrl() {
             const hash = window.location.hash.substring(1);
