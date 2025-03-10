@@ -317,7 +317,12 @@ function getTokenFromUrl() {
     } else {
         accessToken = localStorage.getItem("spotify_access_token");
     }
+
+    console.log("Token obtenido:", accessToken);
 }
+
+// Llamar la función cuando cargue la página
+getTokenFromUrl();
 // Función para buscar canciones
 async function searchSong() {
     const query = document.getElementById("songSearch").value;
