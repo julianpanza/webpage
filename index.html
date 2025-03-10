@@ -310,19 +310,22 @@ async function authenticate() {
 function getTokenFromUrl() {
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
-    accessToken = params.get("access_token");
+    let token = params.get("access_token");
 
-    if (accessToken) {
-        localStorage.setItem("spotify_access_token", accessToken);
+    if (token) {
+        localStorage.setItem("spotify_access_token", token);
     } else {
-        accessToken = localStorage.getItem("spotify_access_token");
+        token = localStorage.getItem("spotify_access_token");
     }
+
+    accessToken = token; // Asigna el token a la variable global
 
     console.log("Token obtenido:", accessToken);
 }
 
-// Llamar la función cuando cargue la página
+// Llamar a la función para obtener el token al cargar la página
 getTokenFromUrl();
+
 // Función para buscar canciones
 async function searchSong() {
     const query = document.getElementById("songSearch").value;
