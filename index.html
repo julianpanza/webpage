@@ -284,7 +284,7 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
         .error { color: red; }
         .success { color: green; }
     </style>
-        <iframe style="border-radius:12px" 
+       <iframe style="border-radius:12px" 
         src="https://open.spotify.com/embed/playlist/4Vm8iih2i2K6iXuPev61Il?si=1e9fa2e72b1b4d90" 
         width="100%" 
         height="380" 
@@ -303,9 +303,9 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
     </div>
 
     <script>
-        const CLIENT_ID = "d950ae09b4e14eb0b82b70151b1dcb82"; // Mover esto a un backend seguro
-        const REDIRECT_URI = "https://julianpanza.github.io/alfon15invite/";
-        const PLAYLIST_ID = "4Vm8iih2i2K6iXuPev61Il";
+        const CLIENT_ID = "d950ae09b4e14eb0b82b70151b1dcb82"; // Reemplaza con tu Client ID
+        const REDIRECT_URI = "https://julianpanza.github.io/alfon15invite/"; // Reemplaza con tu Redirect URI
+        const PLAYLIST_ID = "4Vm8iih2i2K6iXuPev61Il"; // Reemplaza con tu Playlist ID
         let accessToken = null;
 
         // Obtener el token de acceso de la URL o sessionStorage
@@ -340,37 +340,38 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
         }
 
         // Buscar canciones en Spotify
-     async function searchSong() {
-    const query = document.getElementById("songSearch").value.trim();
-    if (!query) {
-        showError("Por favor, ingresa un término de búsqueda.");
-        return;
-    }
+        async function searchSong() {
+            const query = document.getElementById("songSearch").value.trim();
+            if (!query) {
+                showError("Por favor, ingresa un término de búsqueda.");
+                return;
+            }
 
-    if (!validateToken()) {
-        sessionStorage.setItem("search_after_auth", query);
-        return;
-    }
+            if (!validateToken()) {
+                sessionStorage.setItem("search_after_auth", query);
+                return;
+            }
 
-    showLoading();
-    try {
-        const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`, {
-            headers: { Authorization: `Bearer ${accessToken}` }
-        });
+            showLoading();
+            try {
+                const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`, {
+                    headers: { Authorization: `Bearer ${accessToken}` }
+                });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error.message || "Error en la búsqueda.");
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error.message || "Error en la búsqueda.");
+                }
+
+                const data = await response.json();
+                displayResults(data.tracks.items);
+            } catch (error) {
+                showError(`Hubo un problema al buscar las canciones: ${error.message}`);
+            } finally {
+                hideLoading();
+            }
         }
 
-        const data = await response.json();
-        displayResults(data.tracks.items);
-    } catch (error) {
-        showError(`Hubo un problema al buscar las canciones: ${error.message}`);
-    } finally {
-        hideLoading();
-    }
-}
         // Mostrar resultados de la búsqueda
         function displayResults(tracks) {
             const resultsDiv = document.getElementById("searchResults");
@@ -428,12 +429,15 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
             const errorDiv = document.getElementById("error");
             errorDiv.textContent = message;
             errorDiv.classList.remove("hidden");
+            errorDiv.classList.remove("success");
+            errorDiv.classList.add("error");
         }
 
         function showSuccess(message) {
             const errorDiv = document.getElementById("error");
             errorDiv.textContent = message;
             errorDiv.classList.remove("hidden");
+            errorDiv.classList.remove("error");
             errorDiv.classList.add("success");
         }
 
