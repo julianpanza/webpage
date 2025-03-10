@@ -327,7 +327,7 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
 
         // Redirigir a la autenticación de Spotify
         function authenticate() {
-            const authUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${REDIRECT_URI}&scope=playlist-modify-public playlist-modify-private`;
+            const authUrl = `https://api.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${REDIRECT_URI}&scope=playlist-modify-public playlist-modify-private`;
             window.location.href = authUrl;
         }
 
