@@ -311,8 +311,13 @@ function getTokenFromUrl() {
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
     accessToken = params.get("access_token");
-}
 
+    if (accessToken) {
+        localStorage.setItem("spotify_access_token", accessToken);
+    } else {
+        accessToken = localStorage.getItem("spotify_access_token");
+    }
+}
 // Función para buscar canciones
 async function searchSong() {
     const query = document.getElementById("songSearch").value;
@@ -320,6 +325,7 @@ async function searchSong() {
 
     if (!accessToken) {
         authenticate();
+        localStorage.setItem("search_after_auth", query);
         return;
     }
 
@@ -331,6 +337,11 @@ async function searchSong() {
     const resultsDiv = document.getElementById("searchResults");
     resultsDiv.innerHTML = "";
 
+    if (!data.tracks) {
+        resultsDiv.innerHTML = "<p>⚠️ No se encontraron canciones. Intenta con otro término.</p>";
+        return;
+    }
+
     data.tracks.items.forEach(track => {
         const trackDiv = document.createElement("div");
         trackDiv.innerHTML = `
@@ -340,6 +351,15 @@ async function searchSong() {
     });
 }
 
+// Ejecutar búsqueda pendiente después de la autenticación
+document.addEventListener("DOMContentLoaded", () => {
+    const pendingQuery = localStorage.getItem("search_after_auth");
+    if (pendingQuery) {
+        document.getElementById("songSearch").value = pendingQuery;
+        searchSong();
+        localStorage.removeItem("search_after_auth");
+    }
+});
 // Función para agregar canción a la playlist
 async function addSong(trackUri) {
     if (!accessToken) {
