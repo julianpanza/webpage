@@ -1020,7 +1020,7 @@ section.cuenta-regresiva{
     justify-content: center;
     align-items: center;
     height: 100vh;
-    margin-top: -300px; /* ajusta este valor según la altura de tu iframe */
+    margin-top: -100px; /* ajusta este valor según la altura de tu iframe */
 }
 
 .divCanciones {
