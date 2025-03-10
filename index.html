@@ -344,7 +344,22 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
 
             window.location.href = authUrl.toString();
         }
+function getTokenFromUrl() {
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    const token = params.get("access_token");
 
+    if (token) {
+        localStorage.setItem("access_token", token);
+        console.log("🔑 Token guardado:", token);
+        window.history.replaceState({}, document.title, window.location.pathname);
+    } else {
+        console.log("⚠️ No se encontró token en la URL.");
+    }
+}
+
+// Llamamos a la función al cargar la página
+document.addEventListener("DOMContentLoaded", getTokenFromUrl);
         // Obtener token de acceso desde la URL
         async function fetchAccessToken(code) {
             const codeVerifier = localStorage.getItem('code_verifier');
@@ -379,38 +394,43 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
         handleRedirect(); // Ejecutar cuando la página carga
 
         // Buscar canciones en Spotify
-        async function searchSong() {
-            const query = document.getElementById("songSearch").value.trim();
-            if (!query) {
-                showError("Por favor, ingresa un término de búsqueda.");
-                return;
-            }
+       async function searchSong() {
+    const query = document.getElementById("songSearch").value.trim();
+    if (!query) {
+        showError("Por favor, ingresa un término de búsqueda.");
+        return;
+    }
 
-            const accessToken = localStorage.getItem("access_token");
-            if (!accessToken) {
-                authenticate(); // Requiere autenticación si no hay token
-                return;
-            }
+    const accessToken = localStorage.getItem("access_token");
+    if (!accessToken) {
+        showError("⚠️ No hay token de acceso. Redirigiendo a autenticación...");
+        authenticate();
+        return;
+    }
 
-            showLoading();
-            try {
-                const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`, {
-                    headers: { Authorization: `Bearer ${accessToken}` }
-                });
+    showLoading();
+    try {
+        console.log("🔍 Buscando:", query);
+        console.log("🛂 Usando token:", accessToken);
 
-                if (!response.ok) {
-                    throw new Error("Error en la búsqueda.");
-                }
+        const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`, {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
 
-                const data = await response.json();
-                displayResults(data.tracks.items);
-            } catch (error) {
-                showError(`Hubo un problema al buscar las canciones: ${error.message}`);
-            } finally {
-                hideLoading();
-            }
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error("🚨 Respuesta de Spotify:", errorData);
+            throw new Error(errorData.error.message || "Error en la búsqueda.");
         }
 
+        const data = await response.json();
+        displayResults(data.tracks.items);
+    } catch (error) {
+        showError(`⚠️ Hubo un problema al buscar las canciones: ${error.message}`);
+    } finally {
+        hideLoading();
+    }
+}
         // Mostrar resultados de la búsqueda
         function displayResults(tracks) {
             const resultsDiv = document.getElementById("searchResults");
