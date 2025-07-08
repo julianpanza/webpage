@@ -278,7 +278,13 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
 
   </div>
 </section>
-<style>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reproductor Spotify - Playlist</title>
+    <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #1db954, #191414);
@@ -757,7 +763,10 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
                 // 1. Verificar token
                 console.log("🔍 Verificando token...");
                 const tokenCheck = await fetch("https://api.spotify.com/v1/me", {
-                    headers: { Authorization: `Bearer ${accessToken}` }
+                    headers: { 
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
                 });
 
                 if (!tokenCheck.ok) {
@@ -774,7 +783,10 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
                 const playlistResponse = await fetch(
                     `https://api.spotify.com/v1/playlists/${CONFIG.PLAYLIST_ID}`,
                     {
-                        headers: { Authorization: `Bearer ${accessToken}` }
+                        headers: { 
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json'
+                        }
                     }
                 );
 
@@ -805,41 +817,47 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
                     canModify: canModify
                 });
 
-                if (!canModify) {
-                    throw new Error("No tienes permisos para modificar esta playlist. Debe ser tuya, colaborativa o pública.");
-                }
-
-                // 4. Intentar agregar la canción
+                // 4. Intentar agregar la canción - MÉTODO CORREGIDO
                 console.log("➕ Agregando canción a playlist...");
-                const addResponse = await fetch(
-                    `https://api.spotify.com/v1/playlists/${CONFIG.PLAYLIST_ID}/tracks`,
-                    {
-                        method: "POST",
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`,
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({ 
-                            uris: [trackUri],
-                            position: 0  // Agregar al principio
-                        })
-                    }
-                );
+                
+                // Construir la URL correcta para agregar tracks
+                const addUrl = `https://api.spotify.com/v1/playlists/${CONFIG.PLAYLIST_ID}/tracks`;
+                
+                const requestBody = {
+                    uris: [trackUri]
+                };
+
+                console.log("📡 Enviando petición:", {
+                    url: addUrl,
+                    method: 'POST',
+                    body: requestBody
+                });
+
+                const addResponse = await fetch(addUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
 
                 console.log("📡 Respuesta del servidor:", {
                     status: addResponse.status,
                     statusText: addResponse.statusText,
+                    url: addResponse.url,
                     headers: Object.fromEntries(addResponse.headers.entries())
                 });
 
                 if (!addResponse.ok) {
-                    const errorData = await addResponse.json();
+                    const errorData = await addResponse.json().catch(() => ({ error: { message: addResponse.statusText } }));
                     console.error("❌ Error detallado de la API:", errorData);
                     
                     let errorMessage = `Error ${addResponse.status}: `;
                     switch (addResponse.status) {
                         case 400:
-                            errorMessage += "Solicitud inválida - URI de canción puede ser incorrecta";
+                            errorMessage += "Solicitud inválida - Verifica el URI de la canción";
                             break;
                         case 401:
                             errorMessage += "Token expirado o inválido";
@@ -849,6 +867,9 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
                             break;
                         case 404:
                             errorMessage += "Playlist no encontrada";
+                            break;
+                        case 405:
+                            errorMessage += "Método no permitido - Problema con el endpoint";
                             break;
                         case 429:
                             errorMessage += "Demasiadas requests - intenta más tarde";
