@@ -745,7 +745,7 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
         }
 
         // Agregar canción a la playlist (versión corregida)
-        async function addSong(trackUri, button) {
+       async function addSong(trackUri, button) {
     console.log("🎵 Intentando agregar canción:", trackUri);
     
     if (!isAuthenticated) {
@@ -753,12 +753,11 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
         return;
     }
 
-    // Deshabilitar botón
     button.disabled = true;
     button.textContent = "Agregando...";
 
     try {
-        // 1. Verificar token y usuario
+        // 1. Verificar token
         const userCheck = await fetch("https://api.spotify.com/v1/me", {
             headers: { Authorization: `Bearer ${accessToken}` }
         });
@@ -767,20 +766,21 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
             throw new Error("Token inválido o expirado");
         }
 
-        // 2. Construir la URL CORRECTA sin parámetros
-        const playlistId = CONFIG.PLAYLIST_ID.split('?')[0]; // Elimina cualquier parámetro
-        const addUrl = `https://api.spotify.com/v1/playlists/${playlistId}/tracks`;
+        // 2. Limpiar el ID de la playlist (eliminar parámetros)
+        const cleanPlaylistId = CONFIG.PLAYLIST_ID.split('?')[0];
         
-        // 3. Preparar el cuerpo de la solicitud
+        // 3. Construir URL CORRECTA
+        const addUrl = `https://api.spotify.com/v1/playlists/${cleanPlaylistId}/tracks`;
+        
+        // 4. Preparar cuerpo de la solicitud
         const requestBody = {
             uris: [trackUri],
             position: 0
         };
 
-        console.log("URL de la solicitud:", addUrl);
-        console.log("Cuerpo de la solicitud:", requestBody);
+        console.log("URL final:", addUrl); // Verificar en consola
 
-        // 4. Hacer la solicitud POST
+        // 5. Hacer la solicitud POST
         const addResponse = await fetch(addUrl, {
             method: 'POST',
             headers: {
@@ -790,36 +790,29 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
             body: JSON.stringify(requestBody)
         });
 
-        console.log("Respuesta del servidor:", {
-            status: addResponse.status,
-            statusText: addResponse.statusText
-        });
-
         if (!addResponse.ok) {
             const errorData = await addResponse.json().catch(() => ({}));
-            throw new Error(errorData.error?.message || `Error ${addResponse.status} al agregar canción`);
+            throw new Error(errorData.error?.message || `Error ${addResponse.status}`);
         }
 
         const result = await addResponse.json();
-        console.log("✅ Canción agregada exitosamente:", result);
+        console.log("✅ Éxito:", result);
         
-        showStatus("✅ Canción agregada exitosamente a la playlist!", "success");
+        showStatus("✅ Canción agregada!", "success");
         button.textContent = "✅ Agregada";
         button.style.background = "#28a745";
         
     } catch (error) {
-        console.error("❌ Error al agregar canción:", error);
+        console.error("❌ Error:", error);
         showStatus(`❌ Error: ${error.message}`, "error");
         button.disabled = false;
         button.textContent = "➕ Agregar";
         
-        // Si es error de token, forzar re-autenticación
-        if (error.message.includes("Token") || error.message.includes("401")) {
+        if (error.message.includes("401")) {
             setTimeout(() => {
                 showAuthSection();
                 isAuthenticated = false;
                 accessToken = null;
-                updateDebugInfo("Token expirado", "Inválido", "Re-autenticación requerida");
             }, 2000);
         }
     }
