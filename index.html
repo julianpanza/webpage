@@ -279,226 +279,521 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
   </div>
 </section>
 <style>
-        .hidden { display: none; }
-        .loading { color: gray; }
-        .error { color: red; }
-        .success { color: green; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1db954, #191414);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #1db954, #1ed760);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .spotify-embed {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .spotify-embed iframe {
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .search-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-container h3 {
+            margin-top: 0;
+            color: #1db954;
+            font-size: 1.5em;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #songSearch {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #1db954;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #songSearch::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        #songSearch:focus {
+            border-color: #1ed760;
+            box-shadow: 0 0 15px rgba(29, 185, 84, 0.3);
+        }
+
+        .search-btn {
+            background: linear-gradient(45deg, #1db954, #1ed760);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(29, 185, 84, 0.4);
+        }
+
+        .search-btn:active {
+            transform: translateY(0);
+        }
+
+        .auth-btn {
+            background: linear-gradient(45deg, #1db954, #1ed760);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            display: block;
+            margin: 20px auto;
+            transition: all 0.3s ease;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(29, 185, 84, 0.4);
+        }
+
+        .track-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .track-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .track-info {
+            flex: 1;
+        }
+
+        .track-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .track-artist {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9em;
+        }
+
+        .add-btn {
+            background: linear-gradient(45deg, #1db954, #1ed760);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 3px 10px rgba(29, 185, 84, 0.4);
+        }
+
+        .add-btn:disabled {
+            background: gray;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        .loading {
+            background: rgba(255, 255, 255, 0.1);
+            color: #1db954;
+        }
+
+        .error {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff6b6b;
+        }
+
+        .success {
+            background: rgba(0, 255, 0, 0.2);
+            color: #51cf66;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .no-results {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 20px;
+        }
+
+        .auth-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .loading {
+            animation: pulse 2s infinite;
+        }
     </style>
-   <!-- Spotify Playlist Embed -->
-<iframe style="border-radius:12px" 
-    src="https://open.spotify.com/embed/playlist/4Vm8iih2i2K6iXuPev61Il?si=1e9fa2e72b1b4d90" 
-    width="100%" 
-    height="380" 
-    frameborder="0" 
-    allowfullscreen 
-    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
-</iframe>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Playlist Colaborativa</h1>
+        
+        <!-- Spotify Embed -->
+        <div class="spotify-embed">
+            <iframe style="border-radius:12px" 
+                src="https://open.spotify.com/embed/playlist/4Vm8iih2i2K6iXuPev61Il?si=1e9fa2e72b1b4d90" 
+                width="100%" 
+                height="380" 
+                frameborder="0" 
+                allowfullscreen 
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
+            </iframe>
+        </div>
 
-<br>
-<div class="container-busqueda">
-    <div class="animated divCanciones">
-        <input type="text" id="songSearch" placeholder="Escribe una canción...">
-        <button onclick="searchSong()">Buscar</button>
-        <div id="searchResults"></div>
-        <div id="loading" class="hidden">Buscando...</div>
-        <div id="error" class="hidden error"></div>
+        <!-- Auth Section -->
+        <div id="authSection" class="auth-info hidden">
+            <h3>🔐 Autenticación requerida</h3>
+            <p>Para buscar y agregar canciones a la playlist, necesitas autenticarte con Spotify.</p>
+            <button class="auth-btn" onclick="authenticate()">Conectar con Spotify</button>
+        </div>
+
+        <!-- Search Section -->
+        <div id="searchSection" class="search-container hidden">
+            <h3>🔍 Buscar y agregar canciones</h3>
+            <div class="search-box">
+                <input type="text" id="songSearch" placeholder="Busca una canción o artista...">
+                <button class="search-btn" onclick="searchSong()">Buscar</button>
+            </div>
+            <div id="searchResults"></div>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="statusMessage" class="status-message hidden"></div>
     </div>
-</div>
 
-<script>
-    const CLIENT_ID = "d950ae09b4e14eb0b82b70151b1dcb82"; // Reemplaza con tu Client ID
-    const REDIRECT_URI = "https://julianpanza.github.io/alfon15invite/"; // Reemplaza con tu Redirect URI
-    const PLAYLIST_ID = "4Vm8iih2i2K6iXuPev61Il"; // ID de la playlist
-    let accessToken = null;
+    <script>
+        // Configuración de la aplicación
+        const CONFIG = {
+            CLIENT_ID: "d950ae09b4e14eb0b82b70151b1dcb82",
+            REDIRECT_URI: "https://julianpanza.github.io/alfon15invite/",
+            PLAYLIST_ID: "4Vm8iih2i2K6iXuPev61Il",
+            SCOPES: "playlist-modify-public playlist-modify-private"
+        };
 
-    // Obtener token de la URL y almacenarlo en localStorage
-   function getTokenFromUrl() {
-  const hash = window.location.hash.substring(1);
-  const params = new URLSearchParams(hash);
-  const accessToken = params.get("access_token");
-  const refreshToken = params.get("refresh_token");
+        let accessToken = null;
+        let isAuthenticated = false;
 
-  if (accessToken) {
-    localStorage.setItem("spotify_access_token", accessToken);
-    localStorage.setItem("spotify_refresh_token", refreshToken);
-    window.history.replaceState({}, document.title, window.location.pathname); // Limpiar la URL
-  }
-
-  return accessToken;
-}
-
-// Redirigir a la autenticación de Spotify
-function authenticate() {
-  const authUrl = `https://accounts.spotify.com/authorize?client_id=${CLIENT_ID}&response_type=token&redirect_uri=${REDIRECT_URI}&scope=playlist-modify-public playlist-modify-private&show_dialog=true`;
-  window.location.href = authUrl;
-}
-
-// Verificar si el token es válido
-async function validateToken() {
-  const token = localStorage.getItem("spotify_access_token");
-  if (!token) {
-    console.log("⚠️ No hay token, autenticando...");
-    authenticate();
-    return null;
-  }
-
-  try {
-    const response = await fetch("https://api.spotify.com/v1/me", {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    if (response.status === 401) {
-      console.log("🔄 Token expirado, renovando...");
-      const refreshToken = localStorage.getItem("spotify_refresh_token");
-      const newToken = await refreshToken SpotifyToken(refreshToken);
-      localStorage.setItem("spotify_access_token", newToken);
-      return newToken;
-    }
-
-    return token;
-  } catch (error) {
-    console.error("Error validando el token:", error);
-    if (error.response && error.response.status === 401) {
-      console.log("🔄 Token expirado, autenticando de nuevo...");
-      localStorage.removeItem("spotify_access_token");
-      authenticate();
-    }
-    return null;
-  }
-}
-
-// Renovar token de Spotify utilizando el token de refresco
-async function refreshTokenSpotify(refreshToken) {
-  const response = await fetch("https://accounts.spotify.com/api/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: `grant_type=refresh_token&refresh_token=${refreshToken}&client_id=${CLIENT_ID}`
-  });
-
-  const data = await response.json();
-  return data.access_token;
-}
-    // Buscar canciones en Spotify
-    async function searchSong() {
-  const query = document.getElementById("songSearch").value.trim();
-  if (!query) {
-    showError("Por favor, ingresa un término de búsqueda.");
-    return;
-  }
-
-  const token = await validateToken();
-  if (!token) return;
-
-  console.log("Token:", token);
-
-  showLoading();
-  try {
-    const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=5`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    console.log("Respuesta:", response);
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error.message || "Error en la búsqueda.");
-    }
-
-    const data = await response.json();
-    console.log("Datos:", data);
-
-    displayResults(data.tracks.items);
-  } catch (error) {
-    console.error("Error:", error);
-    showError(`⚠️ Hubo un problema al buscar las canciones: ${error.message}`);
-  } finally {
-    hideLoading();
-  }
-}
-
-    // Mostrar los resultados de la búsqueda
-    function displayResults(tracks) {
-        const resultsDiv = document.getElementById("searchResults");
-        resultsDiv.innerHTML = "";
-
-        if (!tracks || tracks.length === 0) {
-            resultsDiv.innerHTML = "<p>⚠️ No se encontraron canciones. Intenta con otro término.</p>";
-            return;
-        }
-
-        tracks.forEach(track => {
-            const trackDiv = document.createElement("div");
-            trackDiv.innerHTML = `
-                <p>${track.name} - ${track.artists[0].name} <button onclick="addSong('${track.uri}')">➕ Agregar</button></p>
-            `;
-            resultsDiv.appendChild(trackDiv);
+        // Inicialización
+        document.addEventListener("DOMContentLoaded", () => {
+            initializeApp();
         });
-    }
 
-    // Agregar canción a la playlist
-    async function addSong(trackUri) {
-        const token = await validateToken();
-        if (!token) return;
-
-        try {
-            const response = await fetch(`https://api.spotify.com/v1/playlists/${PLAYLIST_ID}/tracks`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ uris: [trackUri] })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error.message || "Error al agregar la canción.");
-            }
-
-            showSuccess("✅ Canción agregada a la playlist");
-        } catch (error) {
-            if (error.response && error.response.status === 401) {
-                console.log("🔄 Token expirado, autenticando de nuevo...");
-                localStorage.removeItem("spotify_access_token");
-                authenticate();
+        // Inicializar la aplicación
+        function initializeApp() {
+            console.log("🚀 Inicializando aplicación...");
+            
+            // Verificar si hay token en la URL
+            const tokenFromUrl = getTokenFromUrl();
+            if (tokenFromUrl) {
+                accessToken = tokenFromUrl;
+                validateAndSetupApp();
             } else {
-                showError(`⚠️ Error al agregar la canción: ${error.message}`);
+                // Verificar token almacenado
+                const storedToken = getStoredToken();
+                if (storedToken) {
+                    accessToken = storedToken;
+                    validateAndSetupApp();
+                } else {
+                    showAuthSection();
+                }
             }
         }
-    }
 
-    // Mostrar mensajes de carga, error y éxito
-    function showLoading() {
-        document.getElementById("loading").classList.remove("hidden");
-    }
+        // Obtener token de la URL
+        function getTokenFromUrl() {
+            const hash = window.location.hash.substring(1);
+            if (!hash) return null;
 
-    function hideLoading() {
-        document.getElementById("loading").classList.add("hidden");
-    }
+            const params = new URLSearchParams(hash);
+            const token = params.get("access_token");
+            
+            if (token) {
+                console.log("✅ Token obtenido de la URL");
+                storeToken(token);
+                // Limpiar la URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return token;
+            }
+            
+            return null;
+        }
 
-    function showError(message) {
-        const errorDiv = document.getElementById("error");
-        errorDiv.textContent = message;
-        errorDiv.classList.remove("hidden");
-        errorDiv.classList.remove("success");
-        errorDiv.classList.add("error");
-    }
+        // Almacenar token en memoria (sin localStorage)
+        function storeToken(token) {
+            accessToken = token;
+            console.log("💾 Token almacenado en memoria");
+        }
 
-    function showSuccess(message) {
-        const errorDiv = document.getElementById("error");
-        errorDiv.textContent = message;
-        errorDiv.classList.remove("hidden");
-        errorDiv.classList.remove("error");
-        errorDiv.classList.add("success");
-    }
+        // Obtener token almacenado (simulado)
+        function getStoredToken() {
+            return accessToken;
+        }
 
+        // Validar token y configurar la aplicación
+        async function validateAndSetupApp() {
+            console.log("🔍 Validando token...");
+            
+            try {
+                const response = await fetch("https://api.spotify.com/v1/me", {
+                    headers: { Authorization: `Bearer ${accessToken}` }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    console.log("✅ Usuario autenticado:", user.display_name);
+                    showSearchSection();
+                    isAuthenticated = true;
+                } else {
+                    console.log("❌ Token inválido");
+                    showAuthSection();
+                }
+            } catch (error) {
+                console.error("❌ Error validando token:", error);
+                showAuthSection();
+            }
+        }
+
+        // Mostrar sección de autenticación
+        function showAuthSection() {
+            document.getElementById("authSection").classList.remove("hidden");
+            document.getElementById("searchSection").classList.add("hidden");
+        }
+
+        // Mostrar sección de búsqueda
+        function showSearchSection() {
+            document.getElementById("authSection").classList.add("hidden");
+            document.getElementById("searchSection").classList.remove("hidden");
+        }
+
+        // Autenticación con Spotify
+        function authenticate() {
+            const authUrl = `https://accounts.spotify.com/authorize?` +
+                `client_id=${CONFIG.CLIENT_ID}&` +
+                `response_type=token&` +
+                `redirect_uri=${encodeURIComponent(CONFIG.REDIRECT_URI)}&` +
+                `scope=${encodeURIComponent(CONFIG.SCOPES)}&` +
+                `show_dialog=true`;
+            
+            console.log("🔐 Redirigiendo a autenticación...");
+            window.location.href = authUrl;
+        }
+
+        // Buscar canciones
+        async function searchSong() {
+            const query = document.getElementById("songSearch").value.trim();
+            
+            if (!query) {
+                showStatus("Por favor, ingresa un término de búsqueda.", "error");
+                return;
+            }
+
+            if (!isAuthenticated) {
+                showStatus("Necesitas autenticarte primero.", "error");
+                return;
+            }
+
+            showStatus("Buscando canciones...", "loading");
+            
+            try {
+                const response = await fetch(
+                    `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`,
+                    {
+                        headers: { Authorization: `Bearer ${accessToken}` }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                displayResults(data.tracks.items);
+                hideStatus();
+                
+            } catch (error) {
+                console.error("❌ Error en búsqueda:", error);
+                showStatus(`Error al buscar: ${error.message}`, "error");
+            }
+        }
+
+        // Mostrar resultados de búsqueda
+        function displayResults(tracks) {
+            const resultsDiv = document.getElementById("searchResults");
+            resultsDiv.innerHTML = "";
+
+            if (!tracks || tracks.length === 0) {
+                resultsDiv.innerHTML = '<div class="no-results">No se encontraron canciones. Intenta con otro término.</div>';
+                return;
+            }
+
+            tracks.forEach(track => {
+                const trackDiv = document.createElement("div");
+                trackDiv.className = "track-item";
+                trackDiv.innerHTML = `
+                    <div class="track-info">
+                        <div class="track-name">${track.name}</div>
+                        <div class="track-artist">${track.artists.map(a => a.name).join(", ")}</div>
+                    </div>
+                    <button class="add-btn" onclick="addSong('${track.uri}', this)">
+                        ➕ Agregar
+                    </button>
+                `;
+                resultsDiv.appendChild(trackDiv);
+            });
+        }
+
+        // Agregar canción a la playlist
+        async function addSong(trackUri, button) {
+            if (!isAuthenticated) {
+                showStatus("Necesitas autenticarte primero.", "error");
+                return;
+            }
+
+            // Deshabilitar botón
+            button.disabled = true;
+            button.textContent = "Agregando...";
+
+            try {
+                const response = await fetch(
+                    `https://api.spotify.com/v1/playlists/${CONFIG.PLAYLIST_ID}/tracks`,
+                    {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ uris: [trackUri] })
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+
+                showStatus("✅ Canción agregada exitosamente a la playlist!", "success");
+                button.textContent = "✅ Agregada";
+                button.style.background = "#28a745";
+                
+            } catch (error) {
+                console.error("❌ Error agregando canción:", error);
+                showStatus(`Error al agregar canción: ${error.message}`, "error");
+                button.disabled = false;
+                button.textContent = "➕ Agregar";
+            }
+        }
+
+        // Mostrar mensaje de estado
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById("statusMessage");
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type}`;
+            statusDiv.classList.remove("hidden");
+            
+            // Auto-hide success messages
+            if (type === "success") {
+                setTimeout(() => {
+                    hideStatus();
+                }, 3000);
+            }
+        }
+
+        // Ocultar mensaje de estado
+        function hideStatus() {
+            document.getElementById("statusMessage").classList.add("hidden");
+        }
+
+        // Permitir búsqueda con Enter
+        document.addEventListener("keypress", (e) => {
+            if (e.key === "Enter" && e.target.id === "songSearch") {
+                searchSong();
+            }
+        });
+    
     // Inicialización al cargar la página
     document.addEventListener("DOMContentLoaded", () => {
         getTokenFromUrl();
     });
-</script>
+<</script>
     <!-- Canciones -->
     <section class="canciones">
 
