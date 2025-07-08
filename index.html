@@ -555,11 +555,11 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
     <script>
         // Configuración de la aplicación
         const CONFIG = {
-            CLIENT_ID: "d950ae09b4e14eb0b82b70151b1dcb82",
-            REDIRECT_URI: "https://julianpanza.github.io/alfon15invite/",
-            PLAYLIST_ID: "4Vm8iih2i2K6iXuPev61Il",
-            SCOPES: "playlist-modify-public playlist-modify-private user-read-private"
-        };
+    CLIENT_ID: "d950ae09b4e14eb0b82b70151b1dcb82",
+    REDIRECT_URI: "https://julianpanza.github.io/alfon15invite/",
+    PLAYLIST_ID: "4Vm8iih2i2K6iXuPev61Il", // SIN parámetros ?si=...
+    SCOPES: "playlist-modify-public playlist-modify-private user-read-private"
+};
 
         let accessToken = null;
         let isAuthenticated = false;
@@ -745,7 +745,7 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
         }
 
         // Agregar canción a la playlist (versión corregida)
-       async function addSong(trackUri, button) {
+    async function addSong(trackUri, button) {
     console.log("🎵 Intentando agregar canción:", trackUri);
     
     if (!isAuthenticated) {
@@ -757,62 +757,61 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
     button.textContent = "Agregando...";
 
     try {
-        // 1. Verificar token
-        const userCheck = await fetch("https://api.spotify.com/v1/me", {
-            headers: { Authorization: `Bearer ${accessToken}` }
-        });
-
-        if (!userCheck.ok) {
-            throw new Error("Token inválido o expirado");
-        }
-
-        // 2. Limpiar el ID de la playlist (eliminar parámetros)
-        const cleanPlaylistId = CONFIG.PLAYLIST_ID.split('?')[0];
+        // 1. Limpiar el ID de la playlist (eliminar cualquier parámetro)
+        const cleanPlaylistId = CONFIG.PLAYLIST_ID.split('?')[0].split('&')[0];
         
-        // 3. Construir URL CORRECTA
+        // 2. Construir URL CORRECTA sin parámetros
         const addUrl = `https://api.spotify.com/v1/playlists/${cleanPlaylistId}/tracks`;
         
-        // 4. Preparar cuerpo de la solicitud
+        // 3. Preparar cuerpo de la solicitud
         const requestBody = {
             uris: [trackUri],
             position: 0
         };
 
-        console.log("URL final:", addUrl); // Verificar en consola
+        console.log("URL de solicitud verificada:", addUrl);
 
-        // 5. Hacer la solicitud POST
+        // 4. Hacer la solicitud POST
         const addResponse = await fetch(addUrl, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             },
             body: JSON.stringify(requestBody)
         });
 
+        console.log("Respuesta del servidor:", {
+            status: addResponse.status,
+            statusText: addResponse.statusText
+        });
+
         if (!addResponse.ok) {
             const errorData = await addResponse.json().catch(() => ({}));
-            throw new Error(errorData.error?.message || `Error ${addResponse.status}`);
+            const errorMsg = errorData.error?.message || `Error ${addResponse.status}`;
+            throw new Error(errorMsg);
         }
 
         const result = await addResponse.json();
-        console.log("✅ Éxito:", result);
+        console.log("✅ Canción agregada:", result);
         
-        showStatus("✅ Canción agregada!", "success");
+        showStatus("✅ Canción agregada exitosamente!", "success");
         button.textContent = "✅ Agregada";
         button.style.background = "#28a745";
         
     } catch (error) {
-        console.error("❌ Error:", error);
+        console.error("❌ Error completo:", error);
         showStatus(`❌ Error: ${error.message}`, "error");
         button.disabled = false;
         button.textContent = "➕ Agregar";
         
-        if (error.message.includes("401")) {
+        if (error.message.includes("401") || error.message.includes("token")) {
             setTimeout(() => {
                 showAuthSection();
                 isAuthenticated = false;
                 accessToken = null;
+                updateDebugInfo("Token expirado", "Inválido", "Re-autenticar");
             }, 2000);
         }
     }
