@@ -277,9 +277,6 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
  </div>
 
   </div>
-</section>
-<!DOCTYPE html>
-<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -541,6 +538,7 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
                 <button class="search-btn" onclick="searchSong()">Buscar</button>
             </div>
             <div id="searchResults"></div>
+            <div id="statusMessage" class="status-message hidden"></div>
         </div>
 
         <!-- Debug Section -->
@@ -635,7 +633,7 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
                 if (response.ok) {
                     const user = await response.json();
                     console.log("✅ Usuario autenticado:", user.display_name);
-                    updateDebugInfo("Autenticado", "Válido", user.display_name);
+                    updateDebugInfo("Autenticado", "Válido", user.display_name || user.id);
                     showSearchSection();
                     isAuthenticated = true;
                 } else {
@@ -746,7 +744,7 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
             });
         }
 
-        // Agregar canción a la playlist
+        // Agregar canción a la playlist (versión corregida)
         async function addSong(trackUri, button) {
             console.log("🎵 Intentando agregar canción:", trackUri);
             
@@ -760,125 +758,35 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
             button.textContent = "Agregando...";
 
             try {
-                // 1. Verificar token
-                console.log("🔍 Verificando token...");
-                const tokenCheck = await fetch("https://api.spotify.com/v1/me", {
-                    headers: { 
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json'
-                    }
+                // Verificar token primero
+                const userCheck = await fetch("https://api.spotify.com/v1/me", {
+                    headers: { Authorization: `Bearer ${accessToken}` }
                 });
 
-                if (!tokenCheck.ok) {
-                    const tokenError = await tokenCheck.json();
-                    console.error("❌ Token inválido:", tokenError);
-                    throw new Error("Token expirado. Por favor, vuelve a autenticarte.");
+                if (!userCheck.ok) {
+                    throw new Error("Token inválido o expirado");
                 }
 
-                const userData = await tokenCheck.json();
-                console.log("✅ Usuario verificado:", userData.display_name);
-
-                // 2. Verificar playlist y permisos
-                console.log("📋 Verificando playlist...");
-                const playlistResponse = await fetch(
-                    `https://api.spotify.com/v1/playlists/${CONFIG.PLAYLIST_ID}`,
-                    {
-                        headers: { 
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Content-Type': 'application/json'
-                        }
-                    }
-                );
-
-                if (!playlistResponse.ok) {
-                    const playlistError = await playlistResponse.json();
-                    console.error("❌ Error accediendo a playlist:", playlistError);
-                    throw new Error(`No se puede acceder a la playlist (${playlistResponse.status})`);
-                }
-
-                const playlistData = await playlistResponse.json();
-                console.log("📋 Playlist encontrada:", {
-                    name: playlistData.name,
-                    owner: playlistData.owner.display_name,
-                    public: playlistData.public,
-                    collaborative: playlistData.collaborative,
-                    tracks: playlistData.tracks.total
-                });
-
-                // 3. Verificar si el usuario puede modificar la playlist
-                const canModify = playlistData.owner.id === userData.id || 
-                                playlistData.collaborative || 
-                                playlistData.public;
-
-                console.log("🔒 Permisos:", {
-                    isOwner: playlistData.owner.id === userData.id,
-                    isCollaborative: playlistData.collaborative,
-                    isPublic: playlistData.public,
-                    canModify: canModify
-                });
-
-                // 4. Intentar agregar la canción - MÉTODO CORREGIDO
-                console.log("➕ Agregando canción a playlist...");
-                
-                // Construir la URL correcta para agregar tracks
+                // Construir la petición para agregar canción
                 const addUrl = `https://api.spotify.com/v1/playlists/${CONFIG.PLAYLIST_ID}/tracks`;
                 
                 const requestBody = {
-                    uris: [trackUri]
+                    uris: [trackUri],
+                    position: 0
                 };
-
-                console.log("📡 Enviando petición:", {
-                    url: addUrl,
-                    method: 'POST',
-                    body: requestBody
-                });
 
                 const addResponse = await fetch(addUrl, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(requestBody)
                 });
 
-                console.log("📡 Respuesta del servidor:", {
-                    status: addResponse.status,
-                    statusText: addResponse.statusText,
-                    url: addResponse.url,
-                    headers: Object.fromEntries(addResponse.headers.entries())
-                });
-
                 if (!addResponse.ok) {
-                    const errorData = await addResponse.json().catch(() => ({ error: { message: addResponse.statusText } }));
-                    console.error("❌ Error detallado de la API:", errorData);
-                    
-                    let errorMessage = `Error ${addResponse.status}: `;
-                    switch (addResponse.status) {
-                        case 400:
-                            errorMessage += "Solicitud inválida - Verifica el URI de la canción";
-                            break;
-                        case 401:
-                            errorMessage += "Token expirado o inválido";
-                            break;
-                        case 403:
-                            errorMessage += "Sin permisos para modificar esta playlist";
-                            break;
-                        case 404:
-                            errorMessage += "Playlist no encontrada";
-                            break;
-                        case 405:
-                            errorMessage += "Método no permitido - Problema con el endpoint";
-                            break;
-                        case 429:
-                            errorMessage += "Demasiadas requests - intenta más tarde";
-                            break;
-                        default:
-                            errorMessage += errorData.error?.message || addResponse.statusText;
-                    }
-                    
-                    throw new Error(errorMessage);
+                    const errorData = await addResponse.json();
+                    throw new Error(errorData.error.message || "Error al agregar canción");
                 }
 
                 const result = await addResponse.json();
@@ -889,9 +797,7 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
                 button.style.background = "#28a745";
                 
             } catch (error) {
-                console.error("❌ Error completo:", error);
-                console.error("❌ Stack trace:", error.stack);
-                
+                console.error("❌ Error al agregar canción:", error);
                 showStatus(`❌ ${error.message}`, "error");
                 button.disabled = false;
                 button.textContent = "➕ Agregar";
@@ -925,7 +831,10 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
 
         // Ocultar mensaje de estado
         function hideStatus() {
-            document.getElementById("statusMessage").classList.add("hidden");
+            const statusDiv = document.getElementById("statusMessage");
+            if (statusDiv) {
+                statusDiv.classList.add("hidden");
+            }
         }
 
         // Permitir búsqueda con Enter
@@ -934,7 +843,6 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
                 searchSong();
             }
         });
-
     
     // Inicialización al cargar la página
     document.addEventListener("DOMContentLoaded", () => {
