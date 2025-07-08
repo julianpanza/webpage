@@ -742,6 +742,8 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
 
         // Agregar canción a la playlist
         async function addSong(trackUri, button) {
+            console.log("🎵 Intentando agregar canción:", trackUri);
+            
             if (!isAuthenticated) {
                 showStatus("Necesitas autenticarte primero.", "error");
                 return;
@@ -752,16 +754,23 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
             button.textContent = "Agregando...";
 
             try {
-                // Primero verificar si el token sigue siendo válido
+                // 1. Verificar token
+                console.log("🔍 Verificando token...");
                 const tokenCheck = await fetch("https://api.spotify.com/v1/me", {
                     headers: { Authorization: `Bearer ${accessToken}` }
                 });
 
                 if (!tokenCheck.ok) {
+                    const tokenError = await tokenCheck.json();
+                    console.error("❌ Token inválido:", tokenError);
                     throw new Error("Token expirado. Por favor, vuelve a autenticarte.");
                 }
 
-                // Verificar permisos de la playlist
+                const userData = await tokenCheck.json();
+                console.log("✅ Usuario verificado:", userData.display_name);
+
+                // 2. Verificar playlist y permisos
+                console.log("📋 Verificando playlist...");
                 const playlistResponse = await fetch(
                     `https://api.spotify.com/v1/playlists/${CONFIG.PLAYLIST_ID}`,
                     {
@@ -770,14 +779,39 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
                 );
 
                 if (!playlistResponse.ok) {
-                    throw new Error("No se puede acceder a la playlist. Verifica el ID de la playlist.");
+                    const playlistError = await playlistResponse.json();
+                    console.error("❌ Error accediendo a playlist:", playlistError);
+                    throw new Error(`No se puede acceder a la playlist (${playlistResponse.status})`);
                 }
 
                 const playlistData = await playlistResponse.json();
-                console.log("📋 Playlist info:", playlistData.name, "- Owner:", playlistData.owner.display_name);
+                console.log("📋 Playlist encontrada:", {
+                    name: playlistData.name,
+                    owner: playlistData.owner.display_name,
+                    public: playlistData.public,
+                    collaborative: playlistData.collaborative,
+                    tracks: playlistData.tracks.total
+                });
 
-                // Intentar agregar la canción
-                const response = await fetch(
+                // 3. Verificar si el usuario puede modificar la playlist
+                const canModify = playlistData.owner.id === userData.id || 
+                                playlistData.collaborative || 
+                                playlistData.public;
+
+                console.log("🔒 Permisos:", {
+                    isOwner: playlistData.owner.id === userData.id,
+                    isCollaborative: playlistData.collaborative,
+                    isPublic: playlistData.public,
+                    canModify: canModify
+                });
+
+                if (!canModify) {
+                    throw new Error("No tienes permisos para modificar esta playlist. Debe ser tuya, colaborativa o pública.");
+                }
+
+                // 4. Intentar agregar la canción
+                console.log("➕ Agregando canción a playlist...");
+                const addResponse = await fetch(
                     `https://api.spotify.com/v1/playlists/${CONFIG.PLAYLIST_ID}/tracks`,
                     {
                         method: "POST",
@@ -785,47 +819,69 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
                             Authorization: `Bearer ${accessToken}`,
                             "Content-Type": "application/json"
                         },
-                        body: JSON.stringify({ uris: [trackUri] })
+                        body: JSON.stringify({ 
+                            uris: [trackUri],
+                            position: 0  // Agregar al principio
+                        })
                     }
                 );
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error("❌ Error detallado:", errorData);
+                console.log("📡 Respuesta del servidor:", {
+                    status: addResponse.status,
+                    statusText: addResponse.statusText,
+                    headers: Object.fromEntries(addResponse.headers.entries())
+                });
+
+                if (!addResponse.ok) {
+                    const errorData = await addResponse.json();
+                    console.error("❌ Error detallado de la API:", errorData);
                     
-                    let errorMessage = "Error desconocido";
-                    if (response.status === 403) {
-                        errorMessage = "Sin permisos para modificar esta playlist. Asegúrate de que sea pública o que seas el propietario.";
-                    } else if (response.status === 401) {
-                        errorMessage = "Token expirado. Vuelve a autenticarte.";
-                    } else if (response.status === 404) {
-                        errorMessage = "Playlist no encontrada. Verifica el ID de la playlist.";
-                    } else if (errorData.error) {
-                        errorMessage = errorData.error.message || `Error ${response.status}`;
+                    let errorMessage = `Error ${addResponse.status}: `;
+                    switch (addResponse.status) {
+                        case 400:
+                            errorMessage += "Solicitud inválida - URI de canción puede ser incorrecta";
+                            break;
+                        case 401:
+                            errorMessage += "Token expirado o inválido";
+                            break;
+                        case 403:
+                            errorMessage += "Sin permisos para modificar esta playlist";
+                            break;
+                        case 404:
+                            errorMessage += "Playlist no encontrada";
+                            break;
+                        case 429:
+                            errorMessage += "Demasiadas requests - intenta más tarde";
+                            break;
+                        default:
+                            errorMessage += errorData.error?.message || addResponse.statusText;
                     }
                     
                     throw new Error(errorMessage);
                 }
 
-                const result = await response.json();
-                console.log("✅ Canción agregada:", result);
+                const result = await addResponse.json();
+                console.log("✅ Canción agregada exitosamente:", result);
                 
                 showStatus("✅ Canción agregada exitosamente a la playlist!", "success");
                 button.textContent = "✅ Agregada";
                 button.style.background = "#28a745";
                 
             } catch (error) {
-                console.error("❌ Error agregando canción:", error);
+                console.error("❌ Error completo:", error);
+                console.error("❌ Stack trace:", error.stack);
+                
                 showStatus(`❌ ${error.message}`, "error");
                 button.disabled = false;
                 button.textContent = "➕ Agregar";
                 
-                // Si es error de token, mostrar botón de re-autenticación
-                if (error.message.includes("Token expirado") || error.message.includes("autenticarte")) {
+                // Si es error de token, forzar re-autenticación
+                if (error.message.includes("Token") || error.message.includes("401")) {
                     setTimeout(() => {
                         showAuthSection();
                         isAuthenticated = false;
                         accessToken = null;
+                        updateDebugInfo("Token expirado", "Inválido", "Re-autenticación requerida");
                     }, 2000);
                 }
             }
