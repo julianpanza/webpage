@@ -746,73 +746,84 @@ Seguime en mi cuenta de Instagram y etiquetame en tus fotos y videos.</p>
 
         // Agregar canción a la playlist (versión corregida)
         async function addSong(trackUri, button) {
-            console.log("🎵 Intentando agregar canción:", trackUri);
-            
-            if (!isAuthenticated) {
-                showStatus("Necesitas autenticarte primero.", "error");
-                return;
-            }
+    console.log("🎵 Intentando agregar canción:", trackUri);
+    
+    if (!isAuthenticated) {
+        showStatus("Necesitas autenticarte primero.", "error");
+        return;
+    }
 
-            // Deshabilitar botón
-            button.disabled = true;
-            button.textContent = "Agregando...";
+    // Deshabilitar botón
+    button.disabled = true;
+    button.textContent = "Agregando...";
 
-            try {
-                // Verificar token primero
-                const userCheck = await fetch("https://api.spotify.com/v1/me", {
-                    headers: { Authorization: `Bearer ${accessToken}` }
-                });
+    try {
+        // 1. Verificar token y usuario
+        const userCheck = await fetch("https://api.spotify.com/v1/me", {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
 
-                if (!userCheck.ok) {
-                    throw new Error("Token inválido o expirado");
-                }
-
-                // Construir la petición para agregar canción
-                const addUrl = `https://api.spotify.com/v1/playlists/${CONFIG.PLAYLIST_ID}/tracks`;
-                
-                const requestBody = {
-                    uris: [trackUri],
-                    position: 0
-                };
-
-                const addResponse = await fetch(addUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-
-                if (!addResponse.ok) {
-                    const errorData = await addResponse.json();
-                    throw new Error(errorData.error.message || "Error al agregar canción");
-                }
-
-                const result = await addResponse.json();
-                console.log("✅ Canción agregada exitosamente:", result);
-                
-                showStatus("✅ Canción agregada exitosamente a la playlist!", "success");
-                button.textContent = "✅ Agregada";
-                button.style.background = "#28a745";
-                
-            } catch (error) {
-                console.error("❌ Error al agregar canción:", error);
-                showStatus(`❌ ${error.message}`, "error");
-                button.disabled = false;
-                button.textContent = "➕ Agregar";
-                
-                // Si es error de token, forzar re-autenticación
-                if (error.message.includes("Token") || error.message.includes("401")) {
-                    setTimeout(() => {
-                        showAuthSection();
-                        isAuthenticated = false;
-                        accessToken = null;
-                        updateDebugInfo("Token expirado", "Inválido", "Re-autenticación requerida");
-                    }, 2000);
-                }
-            }
+        if (!userCheck.ok) {
+            throw new Error("Token inválido o expirado");
         }
+
+        // 2. Construir la URL CORRECTA sin parámetros
+        const playlistId = CONFIG.PLAYLIST_ID.split('?')[0]; // Elimina cualquier parámetro
+        const addUrl = `https://api.spotify.com/v1/playlists/${playlistId}/tracks`;
+        
+        // 3. Preparar el cuerpo de la solicitud
+        const requestBody = {
+            uris: [trackUri],
+            position: 0
+        };
+
+        console.log("URL de la solicitud:", addUrl);
+        console.log("Cuerpo de la solicitud:", requestBody);
+
+        // 4. Hacer la solicitud POST
+        const addResponse = await fetch(addUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        console.log("Respuesta del servidor:", {
+            status: addResponse.status,
+            statusText: addResponse.statusText
+        });
+
+        if (!addResponse.ok) {
+            const errorData = await addResponse.json().catch(() => ({}));
+            throw new Error(errorData.error?.message || `Error ${addResponse.status} al agregar canción`);
+        }
+
+        const result = await addResponse.json();
+        console.log("✅ Canción agregada exitosamente:", result);
+        
+        showStatus("✅ Canción agregada exitosamente a la playlist!", "success");
+        button.textContent = "✅ Agregada";
+        button.style.background = "#28a745";
+        
+    } catch (error) {
+        console.error("❌ Error al agregar canción:", error);
+        showStatus(`❌ Error: ${error.message}`, "error");
+        button.disabled = false;
+        button.textContent = "➕ Agregar";
+        
+        // Si es error de token, forzar re-autenticación
+        if (error.message.includes("Token") || error.message.includes("401")) {
+            setTimeout(() => {
+                showAuthSection();
+                isAuthenticated = false;
+                accessToken = null;
+                updateDebugInfo("Token expirado", "Inválido", "Re-autenticación requerida");
+            }, 2000);
+        }
+    }
+}
 
         // Mostrar mensaje de estado
         function showStatus(message, type) {
